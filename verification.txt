@@ -1,0 +1,15 @@
+AI Scammers / Hire Scammers 0.3.5
+165 targeted in-game checks passed in verification-0.3.5-final.log.
+Native temporary-call verification awarded 250 through the employee desktop hook.
+Owner spendable balance, scam earnings urn, team pool, employee earnings,
+native agent-board amount and review snapshot all matched the awarded amount.
+A repeated native verification returned zero and did not credit a second time.
+Native conversation completion IDs resolve to canonical employee scam IDs.
+The same active call can advance to another owned scam after completion.
+No external AI requests or user saves were used by the diagnostics.
+Previous screen controls, public-code typing, portraits, audio routing, purchases,
+native presentation hooks, navigation and call pickup checks also passed.
+NOT LIVE VERIFIED: provider service recovery, separate-client audio/screen control,
+vanilla-client rendering, or actual Linux/Proton gameplay.
+Existing missed payouts are not retroactively restored.
+Installed/build SHA256: A0CD15B76757BEDE1A9FF90A116DE2D9B34532826EA07E560D4A7EAA9298F791Installer checks: Windows isolated WhatIf/install/reinstall backup/tamper refusal passed. Linux Bash syntax and isolated install/reinstall backup/tamper/running-game refusal passed in Git Bash with the process probe stubbed; Linux gameplay remains unverified.

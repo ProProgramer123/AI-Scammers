@@ -1,0 +1,8 @@
+.packages/
+bin/
+obj/
+dist/
+fixtures/
+*.log
+*.cfg
+.env*
