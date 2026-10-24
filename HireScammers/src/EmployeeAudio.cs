@@ -6,6 +6,7 @@ internal static class EmployeeAudio {
  internal static bool DiagnosticCapture;internal static KolkataPlayerVoice DiagnosticReceiver;internal static uint DiagnosticToken;
  internal static KolkataPlayerVoice OwnerVoice(NetworkedCall call){var bot=call&&call.talker?call.talker.GetComponent<Bot>():null;return bot&&bot.Owner?Plugin.OwnerVoice(bot.Owner):null;}
  internal static void Install(Harmony harmony){
+  SpeechPriority.Install(harmony);
   harmony.Patch(AccessTools.Method(typeof(KolkataPlayerVoice),"ServerSendTts"),prefix:new HarmonyMethod(typeof(EmployeeAudio),"RouteTts"));
   harmony.Patch(AccessTools.Method(typeof(ScammerWorkspace),"get_IsLocalSpeakerPublisher"),prefix:new HarmonyMethod(typeof(EmployeeAudio),"LocalPublisher"));
   harmony.Patch(AccessTools.Method(typeof(ScammerWorkspace),"get_SpeakerPublisherId"),prefix:new HarmonyMethod(typeof(EmployeeAudio),"PublisherId"));

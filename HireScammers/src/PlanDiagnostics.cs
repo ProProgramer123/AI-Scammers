@@ -24,7 +24,10 @@ internal static class PlanDiagnostics {
   if(AgentPlans.PublicText(tagged)!="645-34-1538"||!AgentPlans.SpokenValue("645341538",tagged))throw new Exception("Visible tagged code fragments were not reconstructed");
   view["appId"]="identity";view["fields"][0]["label"]="Social Security number";view["buttons"][0]["label"]="File correction";actions=AgentPlans.CodeActions(view,tagged);if(actions.Length!=2||actions[0].value!="645-34-1538")throw new Exception("Native SSN controls did not accept public tagged code");
   if(!EmployeeCallerRequests.Retryable(new TimeoutException())||EmployeeCallerRequests.Retryable(new InvalidOperationException()))throw new Exception("Caller retry policy invalid");
-  DebugMessage();return 15;
+  view["fields"][0]["label"]="Card number. Enter exactly 12 digits. Delimiters are optional.";
+  if(AgentPlans.CodeActions(view,tagged).Length!=0)throw new Exception("An old nine-digit SSN was entered into a twelve-digit card field");
+  actions=AgentPlans.CodeActions(view,"My card number is 1234-5678-9012.");if(actions.Length!=2||actions[0].value!="1234-5678-9012")throw new Exception("Correct card code was rejected by visible field format");
+  DebugMessage();return 17;
  }
  static void DebugMessage(){UnityEngine.Debug.Log("[HireScammers] PLAN PASS: direct/fenced/nested official plans, metadata stripping and public value checks.");}
 }

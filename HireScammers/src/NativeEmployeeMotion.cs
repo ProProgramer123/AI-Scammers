@@ -59,11 +59,17 @@ public sealed class NativeEmployeeMotion : MonoBehaviour {
   }
  }
  void LateUpdate(){if(bot)bot.UpdateNameTagPlacement();if(!legs||seated||!bot||ankleHomes==null)return;foreach(var leg in legs.Legs){var processor=Plugin.Get(leg,"IKProcessor");if(processor!=null){Plugin.Set(processor,"IKWeight",1f);Plugin.Set(processor,"IKPositionWeight",1f);AccessTools.Method(leg.GetType(),"IK_PostUpdate").Invoke(leg,null);AccessTools.Method(processor.GetType(),"Update").Invoke(processor,null);}}}
+ internal static object[] KeyboardTargets(MonitorInteractable monitor,Transform keyboard,float presentationTime){
+  var method=AccessTools.Method(typeof(MonitorInteractable),"GetKeyboardHandTargets");var parameters=method.GetParameters();var values=new object[parameters.Length];
+  values[0]=keyboard;values[1]=Vector3.zero;values[2]=Quaternion.identity;values[3]=Vector3.zero;values[4]=Quaternion.identity;
+  for(int i=5;i<values.Length;i++){if(!parameters[i].IsOptional)throw new NotSupportedException("Unsupported keyboard hand target API");values[i]=parameters[i].Name=="presentationTime"?(object)presentationTime:parameters[i].DefaultValue;}
+  method.Invoke(monitor,values);return values;
+ }
  void Update(){
   if(!hands||!bot)return;var desk=bot.Workspace;var monitor=desk&&desk.callStateScreen?desk.callStateScreen.MonitorInteractable:null;
   if(!seated||!monitor){hands.SetTarget(false,false,Vector3.zero,Quaternion.identity,0);return;}
   bool typing=bot.DesktopTyping;
-  if(typing){var keyboard=AccessTools.Method(typeof(MonitorInteractable),"GetKeyboardTarget").Invoke(monitor,null) as Transform;if(keyboard){var values=new object[]{keyboard,Vector3.zero,Quaternion.identity,Vector3.zero,Quaternion.identity};AccessTools.Method(typeof(MonitorInteractable),"GetKeyboardHandTargets").Invoke(monitor,values);hands.SetKeyboardTargets(true,false,(Vector3)values[1],TypingRotation("Left",keyboard),(Vector3)values[3],TypingRotation("Right",keyboard),1);return;}}
+  if(typing){var keyboard=AccessTools.Method(typeof(MonitorInteractable),"GetKeyboardTarget").Invoke(monitor,null) as Transform;if(keyboard){var values=KeyboardTargets(monitor,keyboard,Time.time+bot.Slot*.37f);hands.SetKeyboardTargets(true,false,(Vector3)values[1],TypingRotation("Left",keyboard),(Vector3)values[3],TypingRotation("Right",keyboard),1);return;}}
   var target=AccessTools.Method(typeof(MonitorInteractable),"GetOrCreateMouseHandIkTarget").Invoke(monitor,null) as Transform;if(target)hands.SetTarget(true,false,target.position,target.rotation,1);
  }
 }

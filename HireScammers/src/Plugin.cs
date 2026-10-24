@@ -16,7 +16,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace HireScammers {
-[BepInPlugin(Id,"Hire Scammers","0.3.5")]
+[BepInPlugin(Id,"Hire Scammers","0.3.8")]
 [BepInProcess("Scam With Your Friends.exe")]
 public sealed class Plugin : ScamMod {
  public const string Id="com.local.scamwyf.hirescammers", App="hire-scammers", Product="hire-scammers-license";
@@ -27,6 +27,7 @@ public sealed class Plugin : ScamMod {
  internal static ConfigEntry<float> Grace;
  Harmony harmony;
  protected override void OnModLoad() {
+  NativeScamPayout.Validate();
   Instance=this;
   Required=Config.Bind("Hiring","PersonalScamsRequired",3,new ConfigDescription("Different callers the player must scam personally.",new AcceptableValueRange<int>(1,100)));
   LicensePrice=Config.Bind("Hiring","AppPrice",500,new ConfigDescription("Personal money price for the app.",new AcceptableValueRange<int>(1,1000000)));
@@ -109,10 +110,10 @@ public sealed class Plugin : ScamMod {
   if(voice&&voice.GetComponent<Bot>()&&(!__instance.chairInteractable||!__instance.chairInteractable.IsOccupied)){__result=voice;return false;}return true;
  }
  static bool Warmup(KolkataPlayerVoice __instance){return !__instance.GetComponent<Bot>();}
- static bool Credit(KolkataOsPlayer __instance,Guid __0,int __1){
+ static bool Credit(KolkataOsPlayer __instance,Guid __0,int __1,object[] __args){
   var bot=Runtime.ForCall(__0);if(!bot||__1<=0){if(__1>0)Runtime.RecordPersonalScam(__instance,__0);return true;}
   // Native rewards are credited without inflating the owner's personal unlock counter.
-  __instance.ServerCreditScamMoney(__1);bot.Earned+=__1;bot.DayEarned+=__1;
+  NativeScamPayout.CreditMoney(__instance,__1,__args.Length>2?__args[2] as string:null);bot.Earned+=__1;bot.DayEarned+=__1;
   Debug.Log("[HireScammers] Native payout: "+bot.DisplayName+" +$"+__1);return false;
  }
  public static void BuildPanel(VisualElement root) {

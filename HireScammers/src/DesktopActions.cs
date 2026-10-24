@@ -85,6 +85,9 @@ public sealed partial class EmployeeDesktop {
  }
  static bool VerifyEmployee(KolkataOsController __instance,string __0,string __1,string __2){
   var display=__instance.GetComponent<EmployeeDesktop>();if(!display)return true;
+  return VerifyEmployeeOnly(display,__0,__1,__2);
+ }
+ static bool VerifyEmployeeOnly(EmployeeDesktop display,string __0,string __1,string __2){
   Debug.Log("[HireScammers] Native verification callback source="+__0+" item="+__1+" activeClick="+display.verificationDispatching);
   var employee=display.bot;if(!NetworkServer.active||!display.verificationDispatching||!employee||!employee.CurrentCall||employee.SelectedScam==null)return false;
   var selected=employee.SelectedScam;if(__0!=selected.appCompletionSource||selected.relevantSentinels==null||!selected.relevantSentinels.Contains(__1))return false;
@@ -93,7 +96,7 @@ public sealed partial class EmployeeDesktop {
   display.VerificationAttempts++;display.LastVerification=employee.CurrentCall.ServerVerifyScamField(__0,__1,__2);
   // The native player command credits this return value separately from verification.
   // Repeated submissions return zero, so only newly awarded payouts enter the ledger.
-  if(display.LastVerification.PayoutAwarded>0)wallet.ServerCreditScamPayout(employee.CurrentCall.CallGuid,display.LastVerification.PayoutAwarded);
+  if(display.LastVerification.PayoutAwarded>0)NativeScamPayout.Credit(wallet,employee.CurrentCall.CallGuid,display.LastVerification.PayoutAwarded,selected.id);
   employee.Status=display.LastVerification.Status=="scam_completed"?"Scam complete":display.LastVerification.FieldVerified?"Code verified through desktop":display.LastVerification.Status;
   return false;
  }

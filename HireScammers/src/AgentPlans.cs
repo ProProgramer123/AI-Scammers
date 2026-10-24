@@ -17,6 +17,9 @@ internal static class AgentPlans {
   if(fields.Length!=1||buttons.Length!=1)return new DesktopCommand[0];
   var codes=Regex.Matches(caller??"",@"\b\d{1,8}(?:[- ]\d{1,8}){1,5}\b|\b[A-Z0-9]{3,8}(?:-[A-Z0-9]{3,8}){1,4}\b|\b[A-Z0-9]{4,24}\b",RegexOptions.IgnoreCase).Cast<Match>().Select(m=>m.Value).Where(v=>v.Any(char.IsDigit)).Distinct().ToArray();
   if(codes.Length!=1||!SpokenValue(codes[0],caller))return new DesktopCommand[0];
+  string instructions=(string)fields[0]["label"]+" "+string.Join(" ",(desktop["instructions"] as JArray??new JArray()).Select(t=>(string)t));
+  var format=Regex.Match(instructions,@"exactly\s+(\d{1,2})\s+(digits|characters)",RegexOptions.IgnoreCase);
+  if(format.Success){int length=int.Parse(format.Groups[1].Value);string compact=new string(codes[0].Where(char.IsLetterOrDigit).ToArray());if(compact.Length!=length||format.Groups[2].Value.Equals("digits",StringComparison.OrdinalIgnoreCase)&&compact.Any(c=>!char.IsDigit(c)))return new DesktopCommand[0];}
   return new[]{new DesktopCommand{type="type",target=(string)fields[0]["id"],value=codes[0]},new DesktopCommand{type="click",target=(string)buttons[0]["id"]}};
  }
  internal static EmployeePlan Parse(JObject response){

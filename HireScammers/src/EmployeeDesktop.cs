@@ -12,13 +12,14 @@ namespace HireScammers {
 // Each viewer renders the native OS locally. Only the server submits gameplay actions.
 public sealed partial class EmployeeDesktop : MonoBehaviour {
  readonly System.Collections.Generic.Dictionary<VisualElement,Action> nativeClicks=new System.Collections.Generic.Dictionary<VisualElement,Action>();
- static EmployeeDesktop initializing;float nextCursorUpdate;Vector2 lastCursor=new Vector2(-1,-1);
+ static EmployeeDesktop initializing;float nextCursorUpdate,nextCallRefresh;volatile bool callRefreshPending;Vector2 lastCursor=new Vector2(-1,-1);
  KolkataOsController controller;UIDocument document;PanelSettings panel;RenderTexture texture;GameObject surface;Material material;Bot bot;ScammerWorkspace workspace;Renderer[] covered;bool[] wasEnabled;CancellationTokenSource lifetime;bool ready;string opened;Label cursor;
  internal static void Install(Harmony harmony){
   var registration=typeof(KolkataOsController).Assembly.GetType("Kolkata.UI.KolkataOsEventRegistry").GetMethods(System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).First(m=>m.Name=="RegisterCallback"&&m.IsGenericMethodDefinition&&m.GetParameters().Length==2&&m.GetParameters()[1].ParameterType==typeof(Action)).MakeGenericMethod(typeof(ClickEvent));harmony.Patch(registration,postfix:new HarmonyMethod(typeof(EmployeeDesktop),"CaptureClick"));
   harmony.Patch(AccessTools.Method(typeof(KolkataOsController),"BuildDesktop"),prefix:new HarmonyMethod(typeof(EmployeeDesktop),"TrimEmployeeApps"){priority=Priority.Last});
   harmony.Patch(AccessTools.Method(typeof(Focusable),"Focus"),prefix:new HarmonyMethod(typeof(EmployeeDesktop),"ProtectPlayerFocus"));
-  foreach(string name in new[]{"OnEnable","Update","EnsureBrowserHost","OpenCameraOnOsOpen","InitializeVirusRuntime","ScheduleAffordableAppNotifications","PublishVisibleTaskApps"}){var method=AccessTools.Method(typeof(KolkataOsController),name);if(method!=null)harmony.Patch(method,prefix:new HarmonyMethod(typeof(EmployeeDesktop),"Skip"));}
+  foreach(string name in new[]{"OnEnable","OnDisable","Update","EnsureBrowserHost","OpenCameraOnOsOpen","InitializeVirusRuntime","ScheduleAffordableAppNotifications","PublishVisibleTaskApps"}){var method=AccessTools.Method(typeof(KolkataOsController),name);if(method!=null)harmony.Patch(method,prefix:new HarmonyMethod(typeof(EmployeeDesktop),"Skip"));}
+  harmony.Patch(AccessTools.Method(typeof(KolkataOsController),"OnVictimCallUiStateChanged"),prefix:new HarmonyMethod(typeof(EmployeeDesktop),"DeferCallRefresh"));
   harmony.Patch(AccessTools.Method(typeof(KolkataOsController),"VerifyScamField"),prefix:new HarmonyMethod(typeof(EmployeeDesktop),"VerifyEmployee"));
   harmony.Patch(AccessTools.Method(typeof(KolkataOsController),"BuildDesktop"),postfix:new HarmonyMethod(typeof(EmployeeDesktop),"MemoryStore"));
  }
@@ -26,6 +27,7 @@ public sealed partial class EmployeeDesktop : MonoBehaviour {
  static void TrimEmployeeApps(KolkataOsController __instance){if(!__instance.GetComponent<EmployeeDesktop>())return;var definitions=Plugin.Get(__instance,"m_appDefinitions") as IList;if(definitions==null)return;var allowed=new System.Collections.Generic.HashSet<string>(ScamTypeLibrary.LoadAll().Where(s=>s!=null).Select(s=>s.appId));allowed.Add("phone");for(int i=definitions.Count-1;i>=0;i--)if(!allowed.Contains((string)Plugin.Get(definitions[i],"id")))definitions.RemoveAt(i);}
  static bool ProtectPlayerFocus(Focusable __instance){for(var element=__instance as VisualElement;element!=null;element=element.parent)if(element.ClassListContains("hire-scammers-passive-panel"))return false;return true;}
  static bool Skip(KolkataOsController __instance){return !__instance.GetComponent<EmployeeDesktop>();}
+ static bool DeferCallRefresh(KolkataOsController __instance){var display=__instance.GetComponent<EmployeeDesktop>();if(!display)return true;display.callRefreshPending=true;return false;}
  static void MemoryStore(KolkataOsController __instance){
   if(!__instance.GetComponent<EmployeeDesktop>())return;var interaction=Plugin.Get(__instance,"m_desktopInteraction");if(interaction==null)return;
   var asm=typeof(KolkataOsController).Assembly;var state=Activator.CreateInstance(asm.GetType("Kolkata.UI.KolkataOsDesktopSessionState"),true);
@@ -68,12 +70,13 @@ public sealed partial class EmployeeDesktop : MonoBehaviour {
  }
  void Update(){
   if(!bot||!workspace||bot.Workspace!=workspace||!bot.IsSeated){Destroy(gameObject);return;}if(!ready)return;
+  if(callRefreshPending&&Time.unscaledTime>=nextCallRefresh){callRefreshPending=false;nextCallRefresh=Time.unscaledTime+.25f;try{AccessTools.Method(typeof(KolkataOsController),"RefreshBoundVictimCallState").Invoke(controller,null);}catch(Exception error){Debug.LogWarning("[HireScammers] Deferred call UI: "+error.GetType().Name);}}
   try{MaintainPhoneWindow();}catch(Exception error){Debug.LogWarning("[HireScammers] Phone window: "+error.GetType().Name);}
   if(surface)surface.SetActive(true);foreach(var renderer in covered)if(renderer)renderer.enabled=false;
   if(cursor!=null&&Time.unscaledTime>=nextCursorUpdate){nextCursorUpdate=Time.unscaledTime+.1f;var point=(Vector2)Plugin.Get(workspace.callStateScreen.MonitorInteractable,"syncedMousePointerPosition");if((point-lastCursor).sqrMagnitude>.000001f){lastCursor=point;cursor.style.left=point.x*document.rootVisualElement.layout.width;cursor.style.top=point.y*document.rootVisualElement.layout.height;cursor.BringToFront();}}
   try{if(NetworkServer.active){if(!runningAction){var command=bot.NextDesktopAction();if(command!=null)StartCoroutine(Execute(command));}}else PassiveRefresh();}catch(Exception error){Debug.LogWarning("[HireScammers] Desktop action failed: "+error.GetType().Name);if(NetworkServer.active)bot.CompleteDesktopAction("Native desktop action failed");}
  }
- void OnDestroy(){if(initializing==this)initializing=null;if(lifetime!=null){lifetime.Cancel();lifetime.Dispose();}if(covered!=null)for(int i=0;i<covered.Length;i++)if(covered[i])covered[i].enabled=wasEnabled[i];if(surface)Destroy(surface);if(material)Destroy(material);if(panel)Destroy(panel);if(texture){texture.Release();Destroy(texture);}}
+ void OnDestroy(){if(initializing==this)initializing=null;if(controller){var bound=Plugin.Get(controller,"m_boundVictimCall") as VictimCall;if(bound)bound.OnPublicUiStateChanged-=(Action<VictimCall>)Delegate.CreateDelegate(typeof(Action<VictimCall>),controller,"OnVictimCallUiStateChanged");}if(lifetime!=null){lifetime.Cancel();lifetime.Dispose();}if(covered!=null)for(int i=0;i<covered.Length;i++)if(covered[i])covered[i].enabled=wasEnabled[i];if(surface)Destroy(surface);if(material)Destroy(material);if(panel)Destroy(panel);if(texture){texture.Release();Destroy(texture);}}
 }
 }
 

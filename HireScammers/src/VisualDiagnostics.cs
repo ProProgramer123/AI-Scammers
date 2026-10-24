@@ -27,6 +27,9 @@ internal static class VisualDiagnostics {
      var body=model.GetComponentsInChildren<SkinnedMeshRenderer>().FirstOrDefault(r=>r.enabled&&r.gameObject.activeInHierarchy&&(r.name=="IndianGuyBody"||r.name=="IndianGirlBody"));
      if(!body)throw new Exception("Missing active body mesh for "+appearance.Name);
      var min=body.bounds.min-actor.transform.position;var max=body.bounds.max-actor.transform.position;
+     // Native renderer bounds may be padded beyond the visible skinned mesh.
+     // Check actual rendered vertices before reporting sinking or displacement.
+     if(min.y<-.2f||min.y>.2f||max.y<1||max.y>2.8f){var mesh=new Mesh();try{body.BakeMesh(mesh);var vertices=mesh.vertices;if(vertices.Length==0)throw new Exception("Empty skinned body mesh");var actual=new Bounds(body.transform.TransformPoint(vertices[0]),Vector3.zero);foreach(var vertex in vertices)actual.Encapsulate(body.transform.TransformPoint(vertex));min=actual.min-actor.transform.position;max=actual.max-actor.transform.position;if(i==0)Debug.Log("[HireScammers] SKINNED GEOMETRY "+appearance.Name+" min="+min+" max="+max);}finally{UnityEngine.Object.Destroy(mesh);}}
      if(min.y<-.2f||min.y>.2f||max.y<1||max.y>2.8f||Mathf.Abs(body.bounds.center.x-actor.transform.position.x)>.8f||Mathf.Abs(body.bounds.center.z-actor.transform.position.z)>.8f)
       throw new Exception("Rendered body displaced from recruit: "+appearance.Name+" min="+min+" max="+max+" modelLocal="+model.transform.localPosition);
      if(Checks==0&&(i==45||i==135))Preview(model,actor.transform.position,i==45?"-walk":"-run");if(i==199)Debug.Log("[HireScammers] VISIBLE PASS: "+appearance.Name+" rendered body min="+min+" max="+max+" after 200 rendered frames; walk="+walkChange+" run="+runChange+"");
