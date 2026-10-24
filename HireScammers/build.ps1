@@ -9,6 +9,7 @@ $refs=@(Get-ChildItem $managed -Filter *.dll | Where-Object Name -ne 'HostBoss.R
 $refs+=@(Get-ChildItem "$GameDir/BepInEx/core" -Filter *.dll | Where-Object Name -in @('BepInEx.dll','0Harmony.dll','ScamWYF.Modding.Core.dll') | ForEach-Object {'/r:'+ $_.FullName})
 if(-not(Test-Path -LiteralPath "$GameDir/BepInEx/core/ScamWYF.Modding.Core.dll")){
  $bundled=Join-Path (Split-Path $PSScriptRoot) 'BepInEx/core/ScamWYF.Modding.Core.dll'
+ if(-not(Test-Path -LiteralPath $bundled)){$bundled=Join-Path (Split-Path $PSScriptRoot) 'ScamWYF.Modding.Core.dll'}
  if(-not(Test-Path -LiteralPath $bundled)){throw 'Missing bundled ScamWYF.Modding.Core.dll'}
  $refs+='/r:'+$bundled
 }
