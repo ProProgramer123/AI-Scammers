@@ -95,3 +95,5 @@ The package contains the plugin, required shared mod library, Windows and Linux/
 Build from source with a .NET SDK: run 
 
     .\HireScammers\build.ps1 -GameDir 'C:\path\to\Scam With Your Friends'
+
+The release ZIP places ScamWYF.HireScammers.dll and ScamWYF.Modding.Core.dll directly at its root for Switchboard. The included setup scripts verify these files and install them into BepInEx/plugins and BepInEx/core respectively. The source repository keeps its BepInEx directory layout; the scripts support either layout.

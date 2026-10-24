@@ -12,16 +12,20 @@ foreach($name in @('BepInEx/core/BepInEx.dll','BepInEx/core/0Harmony.dll','winht
 if((Get-Content -LiteralPath (Join-Path $gameRoot 'doorstop_config.ini') -Raw) -notmatch 'dll_search_path_override\s*=\s*unstripped_corlib'){throw 'Run the official ScamWYF setup to configure its compatibility override first.'}
 $files=@('BepInEx/core/ScamWYF.Modding.Core.dll','BepInEx/plugins/ScamWYF.HireScammers.dll')
 $manifest=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'SHA256SUMS.txt')
+$sources=@{}
 foreach($relative in $files){
-    $line=@($manifest | Where-Object { $_.EndsWith('  '+$relative) })
-    if($line.Count -ne 1 -or (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $relative) -Algorithm SHA256).Hash -ne $line[0].Substring(0,64)){throw "Package checksum mismatch: $relative"}
+    $packageRelative=$relative
+    if(-not(Test-Path -LiteralPath (Join-Path $PSScriptRoot $packageRelative) -PathType Leaf)){$packageRelative=[IO.Path]::GetFileName($relative)}
+    $sources[$relative]=Join-Path $PSScriptRoot $packageRelative
+    $line=@($manifest | Where-Object { $_.EndsWith('  '+$packageRelative) })
+    if($line.Count -ne 1 -or (Get-FileHash -LiteralPath $sources[$relative] -Algorithm SHA256).Hash -ne $line[0].Substring(0,64)){throw "Package checksum mismatch: $relative"}
 }
 if(-not $PSCmdlet.ShouldProcess($gameRoot,'Install AI Scammers and shared mod library')){return}
 $backup=Join-Path $gameRoot ('AI-Scammers/backup/'+[Guid]::NewGuid().ToString('N'))
 $changed=New-Object 'System.Collections.Generic.List[object]'
 try {
     foreach($relative in $files){
-        $source=Join-Path $PSScriptRoot $relative;$target=Join-Path $gameRoot $relative
+        $source=$sources[$relative];$target=Join-Path $gameRoot $relative
         if($relative -like '*/core/*' -and (Test-Path -LiteralPath $target)){
             if([Reflection.AssemblyName]::GetAssemblyName($target).Version -gt [Reflection.AssemblyName]::GetAssemblyName($source).Version){Write-Output 'Keeping newer shared mod library.';continue}
         }

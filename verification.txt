@@ -8,3 +8,5 @@ Initial compatibility run exposed keyboard-argument mismatch; corrected. Initial
 No external AI provider requests, user-save writes or game-assembly patches during diagnostics. Native service authentication may occur when the game starts.
 Not live verified: complete provider-driven player/employee conversations, microphone capture, audible playback, separate-client behavior, old game binary fallbacks or Linux/Proton gameplay.
 Installed/build SHA256: 0FDA2F23F2B7E819FE4D113E4A3C05D383E5411A0CD710C5EE44FD7E9D8FDDF0
+Switchboard packaging correction: runtime DLLs are placed at the ZIP root. Manual installers accept both flat release files and nested source-tree files; installation targets remain plugins/core.
+Corrected flat-package installer checks passed: Windows WhatIf/install/reinstall/folder mapping/tamper rejection; Linux syntax and Git Bash fixtures for install/reinstall/tamper rejection and extracting directly into the game folder (pgrep stubbed). Linux gameplay remains unverified.

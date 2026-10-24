@@ -43,3 +43,5 @@ Merge this override with any existing settings. BepInEx documents why [Proton re
 The host and hiring players need this same mod version. Vanilla guests have experimental NPC compatibility and do not get mod apps or custom live leaderboard rows. Configure the game's AI provider and your own API key in game. Keys and user settings are not included in the release. At week 2, complete three personal scam calls, buy Hire Scammers in Scamazon, then hire and configure workers. Scammer Screens comes with the same license.
 
 To disable this mod, close the game and move only `BepInEx/plugins/ScamWYF.HireScammers.dll` out of the plugins folder. Keep the shared mod library and loader for other mods. Existing mod backups are under the game's `AI-Scammers/backup` folder; configurations and saves remain in place.
+
+The release ZIP places ScamWYF.HireScammers.dll and ScamWYF.Modding.Core.dll directly at its root for Switchboard. The included setup scripts verify these files and install them into BepInEx/plugins and BepInEx/core respectively. The source repository keeps its BepInEx directory layout; the scripts support either layout.

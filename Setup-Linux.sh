@@ -13,9 +13,11 @@ for relative in BepInEx/core/BepInEx.dll BepInEx/core/0Harmony.dll winhttp.dll u
 done
 grep -Eq 'dll_search_path_override[[:space:]]*=[[:space:]]*unstripped_corlib' "$game_root/doorstop_config.ini" || { printf 'Official loader compatibility configuration is missing.\n' >&2; exit 1; }
 files=(BepInEx/core/ScamWYF.Modding.Core.dll BepInEx/plugins/ScamWYF.HireScammers.dll)
+package_file(){ if [[ -f "$package_root/$1" ]]; then printf '%s' "$1"; else printf '%s' "${1##*/}"; fi; }
 for relative in "${files[@]}"; do
-    expected=$(awk -v path="$relative" '$2 == path {print $1}' "$package_root/SHA256SUMS.txt")
-    actual=$(sha256sum -- "$package_root/$relative"); actual=${actual%% *}
+    source_relative=$(package_file "$relative")
+    expected=$(awk -v path="$source_relative" '$2 == path {print $1}' "$package_root/SHA256SUMS.txt")
+    actual=$(sha256sum -- "$package_root/$source_relative"); actual=${actual%% *}
     [[ -n "$expected" && "$expected" == "$actual" ]] || { printf 'Package checksum mismatch: %s\n' "$relative" >&2; exit 1; }
 done
 backup="$game_root/AI-Scammers/backup/$(date +%Y%m%d-%H%M%S)-$$"
@@ -32,15 +34,16 @@ rollback(){
 }
 trap rollback ERR
 for relative in "${files[@]}"; do
-    [[ "$package_root" != "$game_root" ]] || continue
+    source_relative=$(package_file "$relative")
+    [[ "$package_root/$source_relative" != "$game_root/$relative" ]] || continue
     # Shared mod-lib is retained if already present; it may belong to a newer mod.
     if [[ "$relative" == */core/* && -f "$game_root/$relative" ]]; then printf 'Keeping existing shared mod library (requires 1.1.0+).\n'; continue; fi
     had_file=no
     if [[ -f "$game_root/$relative" ]]; then mkdir -p -- "$backup/$(dirname -- "$relative")"; cp -p -- "$game_root/$relative" "$backup/$relative"; had_file=yes; fi
     changed+=("$relative"); existed+=("$had_file")
     mkdir -p -- "$game_root/$(dirname -- "$relative")"
-    cp -- "$package_root/$relative" "$game_root/$relative"
-    cmp -s -- "$package_root/$relative" "$game_root/$relative"
+    cp -- "$package_root/$source_relative" "$game_root/$relative"
+    cmp -s -- "$package_root/$source_relative" "$game_root/$relative"
 done
 trap - ERR
 printf 'AI Scammers 0.3.8 installed. Backups (if needed): %s\n' "$backup"
