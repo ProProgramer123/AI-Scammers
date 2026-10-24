@@ -37,5 +37,5 @@ try {
     foreach($entry in $changed){try{if($entry.Existed){Copy-Item -LiteralPath $entry.Saved -Destination $entry.Target -Force}elseif(Test-Path -LiteralPath $entry.Target){Remove-Item -LiteralPath $entry.Target}}catch{Write-Warning "Restore failed for $($entry.Target). Backup: $($entry.Saved)"}}
     throw
 }
-Write-Output "AI Scammers 0.3.5 installed. Backups (if needed): $backup"
+Write-Output "AI Scammers 0.3.8 installed. Backups (if needed): $backup"
 Write-Output 'Start through Steam and host a lobby. Hire Scammers unlocks in week 2 after 3 personal calls.'

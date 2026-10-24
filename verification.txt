@@ -1,15 +1,10 @@
-AI Scammers / Hire Scammers 0.3.5
-165 targeted in-game checks passed in verification-0.3.5-final.log.
-Native temporary-call verification awarded 250 through the employee desktop hook.
-Owner spendable balance, scam earnings urn, team pool, employee earnings,
-native agent-board amount and review snapshot all matched the awarded amount.
-A repeated native verification returned zero and did not credit a second time.
-Native conversation completion IDs resolve to canonical employee scam IDs.
-The same active call can advance to another owned scam after completion.
-No external AI requests or user saves were used by the diagnostics.
-Previous screen controls, public-code typing, portraits, audio routing, purchases,
-native presentation hooks, navigation and call pickup checks also passed.
-NOT LIVE VERIFIED: provider service recovery, separate-client audio/screen control,
-vanilla-client rendering, or actual Linux/Proton gameplay.
-Existing missed payouts are not retroactively restored.
-Installed/build SHA256: A0CD15B76757BEDE1A9FF90A116DE2D9B34532826EA07E560D4A7EAA9298F791Installer checks: Windows isolated WhatIf/install/reinstall backup/tamper refusal passed. Linux Bash syntax and isolated install/reinstall backup/tamper/running-game refusal passed in Git Bash with the process probe stubbed; Linux gameplay remains unverified.
+AI Scammers / Hire Scammers 0.3.8
+Tested on Scam With Your Friends 0.1.89-swyf / Unity 6000.3.26f1.
+175 focused checks passed in verification-0.3.8-fixed.log. After updating the visibility diagnostic to use actual skinned vertices when renderer bounds are padded, all 199 full checks passed in verification-0.3.8-geometry.log.
+Checks cover all available office looks over 200 rendered walk/run frames, independent nametags and animation drivers, grounded navigation, wall avoidance, native pickup and release, hand placement, actual desktop controls, remote screen actions, human request/audio passthrough, speech queue ordering, native human VerifyScamField passthrough, native 250 payout to owner/team/worker, board/review amounts and repeat submission paying zero.
+Code parsing rejects a nine-digit SSN for a field explicitly requiring twelve card digits and accepts the correct public code.
+Fixed old payout signatures and the new optional keyboard-target arguments. Builds can use the bundled shared library if not installed in the game.
+Initial compatibility run exposed keyboard-argument mismatch; corrected. Initial full visibility run used padded bounds; actual mesh geometry then passed with the same displacement thresholds.
+No external AI provider requests, user-save writes or game-assembly patches during diagnostics. Native service authentication may occur when the game starts.
+Not live verified: complete provider-driven player/employee conversations, microphone capture, audible playback, separate-client behavior, old game binary fallbacks or Linux/Proton gameplay.
+Installed/build SHA256: 0FDA2F23F2B7E819FE4D113E4A3C05D383E5411A0CD710C5EE44FD7E9D8FDDF0

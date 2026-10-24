@@ -1,8 +1,8 @@
 # AI Scammers
 
-Hire Scammers 0.3.5 — a BepInEx mod for Scam With Your Friends 0.1.82-swyf / Unity 6000.3.26f1.
+Hire Scammers 0.3.8 — a BepInEx mod tested with Scam With Your Friends 0.1.89-swyf / Unity 6000.3.26f1.
 
-Download the release ZIP, extract it, and follow [Windows and Linux setup](INSTALL.md). The game mod-loader setup is required first.
+Install through [Switchboard](https://switchboard.ras-rap.click/#/), or download the release ZIP and follow [Windows and Linux setup](INSTALL.md). Switchboard catalogue submission is subject to maintainer review; the GitHub ZIP is available directly.
 
 ## Play
 
@@ -84,3 +84,14 @@ Caller provider errors are logged with their error code, without credentials or 
 Verified desktop submissions now credit the newly awarded native payout through the owner's real money path. This updates the owner's spendable balance, team quota total, worker earnings, native agent board and review snapshots. Repeated verification pays zero under the native verifier. Employee payouts still do not count toward personally scamming callers to unlock hiring.
 
 Completed conversation scam IDs resolve to the same canonical IDs used by the employee planner. A completed scam advances to another available owned scam in the same call, invalidating any pending plan for the finished scam. Existing missed payouts are not reconstructed from old screenshots or transcripts.
+## Changes in 0.3.8
+
+Updates compatibility for game 0.1.89. Restores the human-call speech priority, employee UI refresh and payout fixes previously available only in local builds. Native payout APIs are resolved with their current scam-ID and income-flag arguments; human Verify actions pass through immediately to the game. Employee keyboard targets accept the game's new optional animation/time arguments and retain independent timing.
+
+Automatic code entry now checks explicit digit/character lengths shown by the selected native field. A nine-digit Social Security number is not entered into a card field requiring twelve digits. Correct public caller codes still use the actual native input and submit controls.
+
+The package contains the plugin, required shared mod library, Windows and Linux/Proton scripts, source and checksums. Credentials, game assemblies, saves, recordings and diagnostic logs are excluded. Native provider service availability, actual microphone/audio playback, Linux gameplay and separate-client compatibility remain outside the automated tests; this release does not guarantee those paths. See verification.txt for the exact checks run.
+
+Build from source with a .NET SDK: run 
+
+    .\HireScammers\build.ps1 -GameDir 'C:\path\to\Scam With Your Friends'
