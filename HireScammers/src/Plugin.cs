@@ -16,7 +16,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace HireScammers {
-[BepInPlugin(Id,"Hire Scammers","0.3.8")]
+[BepInPlugin(Id,"Hire Scammers","0.3.11")]
 [BepInProcess("Scam With Your Friends.exe")]
 public sealed class Plugin : ScamMod {
  public const string Id="com.local.scamwyf.hirescammers", App="hire-scammers", Product="hire-scammers-license";

@@ -26,12 +26,20 @@ internal static class VisualDiagnostics {
      if(i<180)AccessTools.Method(typeof(Bot),"Step").Invoke(bot,new object[]{bot.Position+Vector3.forward*3,i<90?1.45f:4.5f});
      var body=model.GetComponentsInChildren<SkinnedMeshRenderer>().FirstOrDefault(r=>r.enabled&&r.gameObject.activeInHierarchy&&(r.name=="IndianGuyBody"||r.name=="IndianGirlBody"));
      if(!body)throw new Exception("Missing active body mesh for "+appearance.Name);
-     var min=body.bounds.min-actor.transform.position;var max=body.bounds.max-actor.transform.position;
+     var geometry=body.bounds;var min=geometry.min-actor.transform.position;var max=geometry.max-actor.transform.position;
      // Native renderer bounds may be padded beyond the visible skinned mesh.
      // Check actual rendered vertices before reporting sinking or displacement.
-     if(min.y<-.2f||min.y>.2f||max.y<1||max.y>2.8f){var mesh=new Mesh();try{body.BakeMesh(mesh);var vertices=mesh.vertices;if(vertices.Length==0)throw new Exception("Empty skinned body mesh");var actual=new Bounds(body.transform.TransformPoint(vertices[0]),Vector3.zero);foreach(var vertex in vertices)actual.Encapsulate(body.transform.TransformPoint(vertex));min=actual.min-actor.transform.position;max=actual.max-actor.transform.position;if(i==0)Debug.Log("[HireScammers] SKINNED GEOMETRY "+appearance.Name+" min="+min+" max="+max);}finally{UnityEngine.Object.Destroy(mesh);}}
-     if(min.y<-.2f||min.y>.2f||max.y<1||max.y>2.8f||Mathf.Abs(body.bounds.center.x-actor.transform.position.x)>.8f||Mathf.Abs(body.bounds.center.z-actor.transform.position.z)>.8f)
+     if(min.y<-.2f||min.y>.2f||max.y<1||max.y>2.8f){var mesh=new Mesh();try{body.BakeMesh(mesh,false);var vertices=mesh.vertices;if(vertices.Length==0)throw new Exception("Empty skinned body mesh");
+      // Match FloorMotion.LowestVertex: imported skins already bake their scale.
+      // TransformPoint would apply the renderer's 55x import scale a second time.
+      Func<Vector3,Vector3> world=v=>body.transform.rotation*v+body.transform.position;geometry=new Bounds(world(vertices[0]),Vector3.zero);foreach(var vertex in vertices)geometry.Encapsulate(world(vertex));min=geometry.min-actor.transform.position;max=geometry.max-actor.transform.position;if(i==0)Debug.Log("[HireScammers] SKINNED GEOMETRY "+appearance.Name+" min="+min+" max="+max);}finally{UnityEngine.Object.Destroy(mesh);}}
+     if(min.y<-.2f||min.y>.2f||max.y<1||max.y>2.8f||Mathf.Abs(geometry.center.x-actor.transform.position.x)>.8f||Mathf.Abs(geometry.center.z-actor.transform.position.z)>.8f){
+      Preview(model,actor.transform.position,"-failure-"+appearance.Name);
+      Debug.Log("[HireScammers] RIG FAILURE meshTransform="+body.transform.lossyScale+" local="+body.transform.localScale+" root="+body.rootBone+" sharedMesh="+body.sharedMesh.name);
+      foreach(var bone in body.bones.Where(b=>b&&(b.name.EndsWith("Hips")||b.name.EndsWith("Foot")||!b.IsChildOf(model.transform))))Debug.Log("[HireScammers] RIG FAILURE bone="+bone.name+" position="+(bone.position-actor.transform.position)+" scale="+bone.lossyScale+" owned="+bone.IsChildOf(model.transform));
+      foreach(var rig in model.GetComponentsInChildren<Animator>(true))Debug.Log("[HireScammers] RIG FAILURE animator="+rig.name+" controller="+rig.runtimeAnimatorController+" avatar="+rig.avatar+" scale="+rig.transform.lossyScale);
       throw new Exception("Rendered body displaced from recruit: "+appearance.Name+" min="+min+" max="+max+" modelLocal="+model.transform.localPosition);
+     }
      if(Checks==0&&(i==45||i==135))Preview(model,actor.transform.position,i==45?"-walk":"-run");if(i==199)Debug.Log("[HireScammers] VISIBLE PASS: "+appearance.Name+" rendered body min="+min+" max="+max+" after 200 rendered frames; walk="+walkChange+" run="+runChange+"");
     }catch(Exception error){Failure=error.ToString();break;}
    }

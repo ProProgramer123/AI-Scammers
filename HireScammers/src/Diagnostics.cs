@@ -14,7 +14,7 @@ public sealed class DiagnosticCall : NetworkedCall {protected override bool Serv
 public sealed class Diagnostics : MonoBehaviour {
  static bool SameColor(Color a,Color b){return Mathf.Abs(a.r-b.r)<.001f&&Mathf.Abs(a.g-b.g)<.001f&&Mathf.Abs(a.b-b.b)<.001f&&Mathf.Abs(a.a-b.a)<.001f;}
  static VisualElement FindControl(VisualElement root,string name){if(root.name==name)return root;for(int i=0;i<root.childCount;i++){var found=FindControl(root[i],name);if(found!=null)return found;}return null;}
- IEnumerator Start(){yield return new WaitForSeconds(8);IntegrationDiagnostics.Inspect();if(!Environment.GetCommandLineArgs().Contains("--hire-scammers-desktop-only"))yield return VisualDiagnostics.Observe();yield return LiveResponseDiagnostics.Observe();int checks=0;
+ IEnumerator Start(){yield return new WaitForSeconds(8);float waitUntil=Time.realtimeSinceStartup+180;while((!NetworkServer.active||!PlayerName.LocalPlayerInstance)&&Time.realtimeSinceStartup<waitUntil)yield return null;if(!NetworkServer.active||!PlayerName.LocalPlayerInstance){Debug.LogError("[HireScammers] SMOKE FAIL: host lobby not available.");Application.Quit();yield break;}IntegrationDiagnostics.Inspect();if(!Environment.GetCommandLineArgs().Contains("--hire-scammers-desktop-only"))yield return VisualDiagnostics.Observe();yield return LiveResponseDiagnostics.Observe();int checks=0;
   try {
    if(VisualDiagnostics.Failure!=null)throw new Exception(VisualDiagnostics.Failure);checks+=VisualDiagnostics.Checks;
    if(LiveResponseDiagnostics.Failure!=null)throw new Exception(LiveResponseDiagnostics.Failure);checks+=LiveResponseDiagnostics.Checks;

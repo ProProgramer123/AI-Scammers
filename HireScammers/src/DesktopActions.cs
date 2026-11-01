@@ -30,12 +30,13 @@ public sealed partial class EmployeeDesktop {
   if(button==null||!button.enabledInHierarchy)throw new InvalidOperationException("The desktop control is disabled");
   // Invoke the native registry's actual click action. Its ClickEvent subscriptions
   // are separate from Clickable.clicked, and offscreen dispatch can be deferred.
-  foreach(var display in Resources.FindObjectsOfTypeAll<EmployeeDesktop>()){
-   if(!display||!display.document||display.document.rootVisualElement.panel!=button.panel)continue;
+  EmployeeDesktop display;
+  if(button.panel!=null&&panelOwners.TryGetValue(button.panel,out display)&&display){
    Action captured;if(display.nativeClicks.TryGetValue(button,out captured)){Debug.Log("[HireScammers] Native click "+button.name+" ready="+Plugin.Get(captured.Target,"ready")+" pending="+Plugin.Get(captured.Target,"pending")+" fieldLength="+((Plugin.Get(captured.Target,"input") as TextField)?.value??"").Length);captured();return;}
    Debug.Log("[HireScammers] Native click lookup "+button.name+" captured="+display.nativeClicks.Count);
-   var registry=Plugin.Get(display.controller,"m_eventRegistry");var registrations=Plugin.Get(registry,"m_unregisterActions") as Action;if(registrations==null)continue;
-   foreach(var registration in registrations.GetInvocationList().Reverse()){
+   var registry=Plugin.Get(display.controller,"m_eventRegistry");var registrations=Plugin.Get(registry,"m_unregisterActions") as Action;
+   if(registrations!=null)
+   foreach(var registration in Enumerable.Reverse(registrations.GetInvocationList())){
     if(Plugin.Get(registration.Target,"visualElement") as VisualElement!=button)continue;
     var unregister=Plugin.Get(registration.Target,"unregisterCallback") as Delegate;if(unregister==null||unregister.Target==null||!unregister.Target.GetType().ToString().Contains("ClickEvent"))continue;
     var callback=Plugin.Get(unregister.Target,"callback") as Action;if(callback!=null){callback();return;}
@@ -82,6 +83,25 @@ public sealed partial class EmployeeDesktop {
   foreach(var label in content.Query<Label>().ToList())Debug.Log("[HireScammers] PHONE LABEL "+label.text+" rect="+label.layout+" display="+label.resolvedStyle.display);
   var labels=content.Query<Label>().ToList();if(!labels.Any(l=>l.text!=null&&l.text.Contains("My diagnostic code is"))||!labels.Any(l=>l.text!=null&&l.text.Contains("I have your code.")))throw new InvalidOperationException("Phone transcript is missing a caller or employee reply");DesktopDiagnostics.Checks+=2;
   var presenter=Plugin.Get(controller,"m_callerWebcamPresenter");var portrait=Plugin.Get(presenter,"m_portraitRoot") as VisualElement;if(presenter==null||!(bool)Plugin.Get(presenter,"m_isBound")||portrait==null||portrait.layout.width<20||portrait.layout.height<20)throw new InvalidOperationException("Native victim portrait is not bound and visible");DesktopDiagnostics.Checks++;
+  CheckPhonePixels(portrait,labels.First(l=>l.text!=null&&l.text.Contains("My diagnostic code is")),labels.First(l=>l.text!=null&&l.text.Contains("I have your code.")));
+  const string followup="The caller sent a live follow-up.";
+  AccessTools.Method(typeof(NetworkedCall),"ServerAppendTranscript").Invoke(bot.CurrentCall,new object[]{false,"Diagnostic Caller",followup});
+  yield return new WaitForSeconds(.5f);yield return new WaitForEndOfFrame();
+  var updated=content.Query<Label>().ToList().FirstOrDefault(l=>l.text!=null&&l.text.Contains(followup));
+  if(updated==null)throw new InvalidOperationException("Phone did not render a live transcript update without reopening");DesktopDiagnostics.Checks++;
+  CheckPhonePixels(updated);
+ }
+ void CheckPhonePixels(params VisualElement[] regions){
+  var previous=RenderTexture.active;var pixels=new Texture2D(texture.width,texture.height,TextureFormat.RGB24,false);
+  try{
+   RenderTexture.active=texture;pixels.ReadPixels(new Rect(0,0,texture.width,texture.height),0,0);pixels.Apply();
+   foreach(var region in regions){
+    var rect=region.worldBound;int colored=0,total=0;
+    for(float y=rect.yMin+4;y<rect.yMax-4;y+=3)for(float x=rect.xMin+4;x<rect.xMax-4;x+=3){var color=pixels.GetPixel(Mathf.Clamp((int)x,0,texture.width-1),Mathf.Clamp(texture.height-1-(int)y,0,texture.height-1));if(color.r<.85f||color.g<.85f||color.b<.85f)colored++;total++;}
+    if(total==0||colored<total*.02f)throw new InvalidOperationException("Phone region exists but renders blank: "+region.GetType().Name+" colored="+colored+"/"+total);DesktopDiagnostics.Checks++;
+   }
+   Debug.Log("[HireScammers] PHONE PIXELS PASS: "+regions.Length+" visible portrait/transcript regions inside native clipped panels; depth/stencil="+texture.depthStencilFormat);
+  }finally{RenderTexture.active=previous;Destroy(pixels);}
  }
  static bool VerifyEmployee(KolkataOsController __instance,string __0,string __1,string __2){
   var display=__instance.GetComponent<EmployeeDesktop>();if(!display)return true;
@@ -96,7 +116,7 @@ public sealed partial class EmployeeDesktop {
   display.VerificationAttempts++;display.LastVerification=employee.CurrentCall.ServerVerifyScamField(__0,__1,__2);
   // The native player command credits this return value separately from verification.
   // Repeated submissions return zero, so only newly awarded payouts enter the ledger.
-  if(display.LastVerification.PayoutAwarded>0)NativeScamPayout.Credit(wallet,employee.CurrentCall.CallGuid,display.LastVerification.PayoutAwarded,selected.id);
+  if(display.LastVerification.PayoutAwarded>0)NativeScamPayout.Credit(wallet,employee.CurrentCall.CallGuid,display.LastVerification.PayoutAwarded,selected.id,employee.CurrentCall.CallerPersonalityName);
   employee.Status=display.LastVerification.Status=="scam_completed"?"Scam complete":display.LastVerification.FieldVerified?"Code verified through desktop":display.LastVerification.Status;
   return false;
  }
