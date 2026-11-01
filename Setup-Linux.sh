@@ -46,6 +46,6 @@ for relative in "${files[@]}"; do
     cmp -s -- "$package_root/$source_relative" "$game_root/$relative"
 done
 trap - ERR
-printf 'AI Scammers 0.3.8 installed. Backups (if needed): %s\n' "$backup"
+printf 'AI Scammers 0.3.11 installed. Backups (if needed): %s\n' "$backup"
 printf 'Steam launch option: WINEDLLOVERRIDES="winhttp=n,b" %%command%%\n'
 printf 'Merge with existing launch options. Use Steam/Proton; Linux gameplay has not been verified.\n'

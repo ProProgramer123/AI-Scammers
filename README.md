@@ -1,6 +1,6 @@
 # AI Scammers
 
-Hire Scammers 0.3.8 — a BepInEx mod tested with Scam With Your Friends 0.1.89-swyf / Unity 6000.3.26f1.
+Hire Scammers 0.3.11 — a BepInEx mod tested with Scam With Your Friends 0.1.95-swyf / Unity 6000.3.26f1.
 
 Install through [Switchboard](https://switchboard.ras-rap.click/#/), or download the release ZIP and follow [Windows and Linux setup](INSTALL.md). Switchboard catalogue submission is subject to maintainer review; the GitHub ZIP is available directly.
 
@@ -92,8 +92,30 @@ Automatic code entry now checks explicit digit/character lengths shown by the se
 
 The package contains the plugin, required shared mod library, Windows and Linux/Proton scripts, source and checksums. Credentials, game assemblies, saves, recordings and diagnostic logs are excluded. Native provider service availability, actual microphone/audio playback, Linux gameplay and separate-client compatibility remain outside the automated tests; this release does not guarantee those paths. See verification.txt for the exact checks run.
 
-Build from source with a .NET SDK: run 
+Build from source with a .NET SDK: run
 
     .\HireScammers\build.ps1 -GameDir 'C:\path\to\Scam With Your Friends'
 
 The release ZIP places ScamWYF.HireScammers.dll and ScamWYF.Modding.Core.dll directly at its root for Switchboard. The included setup scripts verify these files and install them into BepInEx/plugins and BepInEx/core respectively. The source repository keeps its BepInEx directory layout; the scripts support either layout.
+
+## Changes in 0.3.9
+
+Reduces computer-entry hitches by skipping the worker OS's preload of every wallpaper. Only the selected wallpaper is decoded, and workers share their own image cache across calls. This cache is separate from the player's desktop. Button registration and native clicks use direct ownership lookups instead of scanning all loaded scene objects. Render-target allocation, visual-tree cloning and OS initialization are queued and spread across frames; 1080p desktop rendering is retained.
+
+187 focused in-game checks passed, including two simultaneous desktop requests, shared-cache reuse, independent keyboard panels, cleanup, native phone UI, code verification and payouts. Warm desktop initialization took 159/201 ms across several frames in the test; the largest observed whole-game frame was 98 ms, so this is not a guarantee of zero hitches. Full provider-driven calls and separate-client performance remain unmeasured.
+
+## Changes in 0.3.10
+
+Supports the four-argument payout API introduced in game 0.1.91, including its caller-name argument. Worker payouts still credit the owner, team and worker without counting toward the owner's personal hiring unlock.
+
+Desktop rebuilds now replace their callback ownership records, release the old callbacks and reopen the active phone/scam windows. Teardown cancels initialization before disposing the UI, pauses its clock, disposes recurring content schedules (the native content builder has a Dispose method without implementing IDisposable), and releases owned app/portrait runtimes while retaining the shared worker asset cache.
+
+215 full automated in-game checks passed on 0.1.91, including character locomotion, human input isolation, actual native code entry/verification, temporary-wallet payouts, repeated desktop startup, rebuild routing and cleanup. A regression check reproduced stale callback ownership on 0.3.9 before the fix. The test still observed a 117 ms whole-game frame during concurrent desktop startup; zero hitches are not guaranteed.
+
+After a game update, rerun the [community loader setup](https://github.com/swyf-modding/Setup) or Switchboard repair before installing the mod. This machine had an outdated derived Mirror.dll overriding the current game's networking assembly; regenerating the compatibility overrides restored host startup. Loader repair is separate from this mod's Windows/Linux installers. Do not redistribute the generated game DLLs.
+
+## Changes in 0.3.11
+
+Fixes blank caller-face and conversation panels on employee computer screens. The worker render target again has a depth/stencil buffer, which UI Toolkit needs for its rounded clipping masks. Image caching and queued startup remain enabled. The regression checks now inspect actual rendered portrait, caller-text and worker-text pixels, and verify a new transcript message appears without reopening the Phone app. The previous element-only checks passed even while the panels rendered white.
+
+Builds now prefer the installed unstripped compatibility assemblies, matching the libraries used at runtime. This avoids missing Regex overloads in the latest game's stripped build references. Optional legacy browser hooks are checked without logging a missing-method warning. The character visibility diagnostic also handles imported mesh scale consistently with the floor-placement code; rendered captures confirmed its former large-size report was a measurement error.

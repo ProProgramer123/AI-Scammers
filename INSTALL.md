@@ -1,6 +1,8 @@
 # Windows and Linux setup
 
-AI Scammers 0.3.8 is a BepInEx plugin for Scam With Your Friends 0.1.89-swyf. Both installers update the mod and its shared library in an **existing configured mod loader**. They do not download or repair the loader, change Steam settings, or install HostBoss.
+AI Scammers 0.3.11 is a BepInEx plugin tested with Scam With Your Friends 0.1.95-swyf. Both installers update the mod and its shared library in an **existing configured mod loader**. They do not download or repair the loader, change Steam settings, or install HostBoss.
+
+After updating the game, rerun community ScamWYF Setup or Switchboard's loader repair before installing the mod. Derived compatibility DLLs can otherwise override the new game's assemblies and prevent lobby startup. Back up the old compatibility folder before repairing. No game DLLs are included in this package.
 
 ## Switchboard
 
